@@ -2,7 +2,9 @@ import { useCallback } from 'react'
 import { EffectComposer, Bloom, Vignette, Noise } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import StarField from './objects/StarField'
+import StarCloseup from './objects/StarCloseup'
 import ObjectField from './objects/ObjectField'
+import GalaxySprite from './objects/GalaxySprite'
 import { useCatalog } from './hooks/useCatalog'
 import { useCamera } from './hooks/useCamera'
 import { useFlightControls } from './hooks/useFlightControls'
@@ -50,6 +52,9 @@ export default function Universe() {
       {/* Star field: 109K stars as a single Points draw call */}
       <StarField />
 
+      {/* Star close-up: detailed sphere when camera is near a star */}
+      <StarCloseup />
+
       {/* Galaxies: 10K+ as purple-tinted points */}
       <ObjectField
         objects={galaxies}
@@ -58,6 +63,9 @@ export default function Universe() {
         onSelect={onSelect}
         baseSize={5}
       />
+
+      {/* Galaxy sprites: detailed billboards for nearby galaxies */}
+      <GalaxySprite />
 
       {/* Nebulae: ~430 as pink/red points */}
       <ObjectField
