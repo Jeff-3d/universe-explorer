@@ -10,6 +10,7 @@ import CMBWall from './objects/CMBWall'
 import WarpEffect from './objects/WarpEffect'
 import WarpTunnel from './objects/WarpTunnel'
 import MotionVectors from './objects/MotionVectors'
+import HabitableZone from './objects/HabitableZone'
 import { useCatalog } from './hooks/useCatalog'
 import { useCamera } from './hooks/useCamera'
 import { useFlightControls } from './hooks/useFlightControls'
@@ -75,6 +76,9 @@ export default function Universe() {
         onSelect={onSelect}
         baseSize={5}
       />
+
+      {/* Habitable zones: green rings around stars with luminosity data */}
+      <HabitableZone />
 
       {/* Galaxy sprites: detailed billboards for nearby galaxies */}
       <GalaxySprite />
