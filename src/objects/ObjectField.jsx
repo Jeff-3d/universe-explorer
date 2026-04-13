@@ -1,6 +1,8 @@
 import { useMemo, useRef, useCallback } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
+import { useStore } from '../store'
+import { INSTRUMENTS } from '../ui/InstrumentFilter'
 
 /**
  * Generic Points-based field renderer for any object type.
@@ -101,17 +103,29 @@ export default function ObjectField({ objects, visible, scaleMode, onSelect, bas
   const pointsRef = useRef()
   const { raycaster } = useThree()
   const pointerDown = useRef(null)
+  const instrument = useStore((s) => s.instrument)
+
+  // Filter objects by instrument magnitude limit
+  const filtered = useMemo(() => {
+    if (!objects || objects.length === 0) return []
+    const instDef = INSTRUMENTS.find(i => i.id === instrument)
+    const magLimit = instDef ? instDef.magLimit : 99
+    if (magLimit >= 99) return objects
+    return objects.filter(o =>
+      o.magnitude !== null && o.magnitude !== undefined && o.magnitude <= magLimit
+    )
+  }, [objects, instrument])
 
   const { positions, colors, sizes } = useMemo(() => {
-    if (!objects || objects.length === 0) {
+    if (filtered.length === 0) {
       return {
         positions: new Float32Array(0),
         colors: new Float32Array(0),
         sizes: new Float32Array(0),
       }
     }
-    return buildBuffers(objects, scaleMode, baseSize)
-  }, [objects, scaleMode, baseSize])
+    return buildBuffers(filtered, scaleMode, baseSize)
+  }, [filtered, scaleMode, baseSize])
 
   useFrame(() => {
     raycaster.params.Points.threshold = 2.0
@@ -123,7 +137,7 @@ export default function ObjectField({ objects, visible, scaleMode, onSelect, bas
 
   const handleClick = useCallback(
     (e) => {
-      if (!objects || !e.intersections.length || !onSelect) return
+      if (!filtered.length || !e.intersections.length || !onSelect) return
       if (pointerDown.current) {
         const dx = e.clientX - pointerDown.current.x
         const dy = e.clientY - pointerDown.current.y
@@ -132,14 +146,14 @@ export default function ObjectField({ objects, visible, scaleMode, onSelect, bas
       e.stopPropagation()
       const hit = e.intersections[0]
       const index = hit.index
-      if (index !== undefined && index < objects.length) {
-        onSelect(objects[index])
+      if (index !== undefined && index < filtered.length) {
+        onSelect(filtered[index])
       }
     },
-    [objects, onSelect]
+    [filtered, onSelect]
   )
 
-  if (!objects || objects.length === 0 || !visible) return null
+  if (filtered.length === 0 || !visible) return null
 
   return (
     <points
