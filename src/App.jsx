@@ -10,6 +10,7 @@ import ViewModeToggle from './ui/ViewModeToggle'
 import AudioControls from './ui/AudioControls'
 import RadiationIndicator from './ui/RadiationIndicator'
 import DistanceNarration from './ui/DistanceNarration'
+import TourPlayer from './ui/TourPlayer'
 import SizeComparison from './ui/SizeComparison'
 
 export default function App() {
@@ -107,6 +108,9 @@ export default function App() {
 
       {/* Distance narration — center screen */}
       {!starsLoading && !starsError && <DistanceNarration />}
+
+      {/* Tour player — bottom left */}
+      {!starsLoading && !starsError && <TourPlayer />}
 
       {/* Audio controls — bottom right */}
       {!starsLoading && !starsError && <AudioControls />}
