@@ -14,6 +14,8 @@ import HabitableZone from './objects/HabitableZone'
 import RadioBubble from './objects/RadioBubble'
 import LightCone from './objects/LightCone'
 import DarkMatterHalo from './objects/DarkMatterHalo'
+import ConstellationLines from './objects/ConstellationLines'
+import LineOfSightBeam from './objects/LineOfSightBeam'
 import { useCatalog } from './hooks/useCatalog'
 import { useCamera } from './hooks/useCamera'
 import { useFlightControls } from './hooks/useFlightControls'
@@ -70,6 +72,12 @@ export default function Universe() {
 
       {/* Motion vectors: velocity arrows for nearby stars */}
       <MotionVectors />
+
+      {/* Constellation lines: stick figures connecting stars */}
+      <ConstellationLines />
+
+      {/* Line of sight beam to selected object */}
+      <LineOfSightBeam />
 
       {/* Galaxies: 10K+ as purple-tinted points */}
       <ObjectField
