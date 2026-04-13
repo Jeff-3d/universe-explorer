@@ -6,6 +6,7 @@ import FilterBar from './ui/FilterBar'
 import SearchBar from './ui/SearchBar'
 import ScaleToggle from './ui/ScaleToggle'
 import SpeedControl from './ui/SpeedControl'
+import ViewModeToggle from './ui/ViewModeToggle'
 
 export default function App() {
   const starsLoading = useStore((s) => s.starsLoading)
@@ -78,6 +79,13 @@ export default function App() {
 
         {/* Scale toggle */}
         {!starsLoading && !starsError && <ScaleToggle />}
+
+        {/* View mode + time projection */}
+        {!starsLoading && !starsError && (
+          <div className="mt-2">
+            <ViewModeToggle />
+          </div>
+        )}
       </div>
 
       {/* Info panel — top right */}

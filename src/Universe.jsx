@@ -9,6 +9,7 @@ import CosmicWeb from './objects/CosmicWeb'
 import CMBWall from './objects/CMBWall'
 import WarpEffect from './objects/WarpEffect'
 import WarpTunnel from './objects/WarpTunnel'
+import MotionVectors from './objects/MotionVectors'
 import { useCatalog } from './hooks/useCatalog'
 import { useCamera } from './hooks/useCamera'
 import { useFlightControls } from './hooks/useFlightControls'
@@ -58,6 +59,9 @@ export default function Universe() {
 
       {/* Star close-up: detailed sphere when camera is near a star */}
       <StarCloseup />
+
+      {/* Motion vectors: velocity arrows for nearby stars */}
+      <MotionVectors />
 
       {/* Galaxies: 10K+ as purple-tinted points */}
       <ObjectField

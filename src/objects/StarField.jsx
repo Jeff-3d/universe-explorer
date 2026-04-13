@@ -2,6 +2,7 @@ import { useMemo, useRef, useCallback } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useStore } from '../store'
+import { estimatePresentPosition, projectPosition } from '../utils/physics'
 
 /**
  * Vertex shader for star points.
@@ -135,7 +136,7 @@ function logCompress(x, y, z) {
   return { x: x * scale, y: y * scale, z: z * scale }
 }
 
-function buildStarBuffers(stars, scaleMode) {
+function buildStarBuffers(stars, scaleMode, viewMode = 'observed', timeOffsetKYears = 0) {
   const count = stars.length
   const positions = new Float32Array(count * 3)
   const colors = new Float32Array(count * 3)
@@ -145,10 +146,26 @@ function buildStarBuffers(stars, scaleMode) {
   for (let i = 0; i < count; i++) {
     const star = stars[i]
 
+    // Base position — optionally corrected for light travel time or time-projected
+    let baseX = star.x, baseY = star.y, baseZ = star.z
+
+    if (viewMode === 'estimated_present') {
+      const ep = estimatePresentPosition(star)
+      baseX = ep.x; baseY = ep.y; baseZ = ep.z
+    }
+
+    if (timeOffsetKYears !== 0) {
+      const proj = projectPosition(
+        { x: baseX, y: baseY, z: baseZ, vx: star.vx, vy: star.vy, vz: star.vz },
+        timeOffsetKYears * 1000 // convert K years to years
+      )
+      baseX = proj.x; baseY = proj.y; baseZ = proj.z
+    }
+
     // Position — apply log compression to make the full galaxy visible
-    let px = star.x, py = star.y, pz = star.z
+    let px = baseX, py = baseY, pz = baseZ
     if (scaleMode === 'log') {
-      const compressed = logCompress(star.x, star.y, star.z)
+      const compressed = logCompress(baseX, baseY, baseZ)
       px = compressed.x
       py = compressed.y
       pz = compressed.z
@@ -193,6 +210,8 @@ export default function StarField() {
   const setSelectedObject = useStore((s) => s.setSelectedObject)
   const relativisticMode = useStore((s) => s.relativisticMode)
   const speedLevel = useStore((s) => s.speedLevel)
+  const viewMode = useStore((s) => s.viewMode)
+  const timeOffset = useStore((s) => s.timeOffset)
   const materialRef = useRef()
   const pointsRef = useRef()
   const { raycaster, camera } = useThree()
@@ -209,10 +228,10 @@ export default function StarField() {
       }
     }
     console.time('buildStarBuffers')
-    const result = buildStarBuffers(stars, scaleMode)
+    const result = buildStarBuffers(stars, scaleMode, viewMode, timeOffset)
     console.timeEnd('buildStarBuffers')
     return result
-  }, [stars, scaleMode])
+  }, [stars, scaleMode, viewMode, timeOffset])
 
   // Set raycaster threshold and update relativistic uniforms
   useFrame(() => {

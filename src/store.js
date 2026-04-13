@@ -41,6 +41,14 @@ export const useStore = create((set) => ({
   viewMode: 'observed', // 'observed' | 'estimated_present'
   setViewMode: (mode) => set({ viewMode: mode }),
 
+  // Time projection (years from present, 0 = now)
+  timeOffset: 0, // in thousands of years
+  setTimeOffset: (offset) => set({ timeOffset: offset }),
+
+  // Motion vectors visibility
+  showMotionVectors: false,
+  toggleMotionVectors: () => set((s) => ({ showMotionVectors: !s.showMotionVectors })),
+
   // Scale mode
   scaleMode: 'log', // 'linear' | 'log'
   setScaleMode: (mode) => set({ scaleMode: mode }),
