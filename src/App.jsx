@@ -15,6 +15,7 @@ import InstrumentFilter from './ui/InstrumentFilter'
 import RealSkyOverlay from './ui/RealSkyOverlay'
 import CosmicTimeline from './ui/CosmicTimeline'
 import SnapshotJournal from './ui/SnapshotJournal'
+import SettingsPanel from './ui/SettingsPanel'
 import SizeComparison from './ui/SizeComparison'
 
 export default function App() {
@@ -138,6 +139,9 @@ export default function App() {
 
       {/* Audio controls — bottom right */}
       {!starsLoading && !starsError && <AudioControls />}
+
+      {/* Settings panel */}
+      {!starsLoading && !starsError && <SettingsPanel />}
     </div>
   )
 }
