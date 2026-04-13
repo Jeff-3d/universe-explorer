@@ -21,10 +21,14 @@ const vertexShader = /* glsl */ `
   attribute float size;
   attribute vec3 objColor;
 
+  uniform float uOpacity;
+
   varying vec3 vColor;
+  varying float vOpacity;
 
   void main() {
     vColor = objColor;
+    vOpacity = uOpacity;
 
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 
@@ -38,6 +42,7 @@ const vertexShader = /* glsl */ `
 
 const fragmentShader = /* glsl */ `
   varying vec3 vColor;
+  varying float vOpacity;
 
   void main() {
     vec2 center = gl_PointCoord - vec2(0.5);
@@ -51,7 +56,7 @@ const fragmentShader = /* glsl */ `
     float glow = core * 0.5 + halo * 0.5;
 
     vec3 color = vColor * glow;
-    float alpha = glow * 0.9;
+    float alpha = glow * 0.9 * vOpacity;
     alpha = clamp(alpha, 0.0, 1.0);
 
     gl_FragColor = vec4(color, alpha);
@@ -98,10 +103,10 @@ function buildBuffers(objects, scaleMode, baseSize) {
   return { positions, colors, sizes }
 }
 
-export default function ObjectField({ objects, visible, scaleMode, onSelect, baseSize = 3 }) {
+export default function ObjectField({ objects, visible, scaleMode, onSelect, baseSize = 3, fadeDistance = 0 }) {
   const materialRef = useRef()
   const pointsRef = useRef()
-  const { raycaster } = useThree()
+  const { raycaster, camera } = useThree()
   const pointerDown = useRef(null)
   const instrument = useStore((s) => s.instrument)
 
@@ -129,6 +134,13 @@ export default function ObjectField({ objects, visible, scaleMode, onSelect, bas
 
   useFrame(() => {
     raycaster.params.Points.threshold = 2.0
+    // Fade objects based on camera distance (e.g., exoplanets only visible when close)
+    if (fadeDistance > 0 && materialRef.current) {
+      const camDist = camera.position.length()
+      const opacity = Math.max(0, 1 - camDist / fadeDistance)
+      materialRef.current.uniforms.uOpacity.value = opacity
+      if (pointsRef.current) pointsRef.current.visible = opacity > 0.01
+    }
   })
 
   const handlePointerDown = useCallback((e) => {
@@ -155,6 +167,8 @@ export default function ObjectField({ objects, visible, scaleMode, onSelect, bas
 
   if (filtered.length === 0 || !visible) return null
 
+  const objCount = positions.length / 3
+
   return (
     <points
       ref={pointsRef}
@@ -162,22 +176,22 @@ export default function ObjectField({ objects, visible, scaleMode, onSelect, bas
       onPointerDown={handlePointerDown}
       onClick={handleClick}
     >
-      <bufferGeometry>
+      <bufferGeometry key={objCount}>
         <bufferAttribute
           attach="attributes-position"
-          count={positions.length / 3}
+          count={objCount}
           array={positions}
           itemSize={3}
         />
         <bufferAttribute
           attach="attributes-objColor"
-          count={colors.length / 3}
+          count={objCount}
           array={colors}
           itemSize={3}
         />
         <bufferAttribute
           attach="attributes-size"
-          count={sizes.length}
+          count={objCount}
           array={sizes}
           itemSize={1}
         />
@@ -186,6 +200,7 @@ export default function ObjectField({ objects, visible, scaleMode, onSelect, bas
         ref={materialRef}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
+        uniforms={{ uOpacity: { value: 1.0 } }}
         transparent
         depthWrite={false}
         blending={THREE.AdditiveBlending}

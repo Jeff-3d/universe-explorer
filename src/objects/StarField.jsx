@@ -241,6 +241,7 @@ export default function StarField() {
     console.time('buildStarBuffers')
     const result = buildStarBuffers(stars, scaleMode, viewMode, timeOffset, instrument)
     console.timeEnd('buildStarBuffers')
+    console.log(`StarField: instrument=${instrument}, rendering ${result.positions.length / 3} of ${stars.length} stars`)
     return result
   }, [stars, scaleMode, viewMode, timeOffset, instrument])
 
@@ -294,30 +295,33 @@ export default function StarField() {
 
   if (!stars || stars.length === 0 || !starsVisible) return null
 
+  // Key forces geometry recreation when star count changes (instrument filter)
+  const starCount = positions.length / 3
+
   return (
     <points ref={pointsRef} frustumCulled={false} onPointerDown={handlePointerDown} onClick={handleClick}>
-      <bufferGeometry>
+      <bufferGeometry key={starCount}>
         <bufferAttribute
           attach="attributes-position"
-          count={positions.length / 3}
+          count={starCount}
           array={positions}
           itemSize={3}
         />
         <bufferAttribute
           attach="attributes-starColor"
-          count={colors.length / 3}
+          count={starCount}
           array={colors}
           itemSize={3}
         />
         <bufferAttribute
           attach="attributes-size"
-          count={sizes.length}
+          count={starCount}
           array={sizes}
           itemSize={1}
         />
         <bufferAttribute
           attach="attributes-brightness"
-          count={brightness.length}
+          count={starCount}
           array={brightness}
           itemSize={1}
         />

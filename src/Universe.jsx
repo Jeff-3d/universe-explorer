@@ -115,13 +115,14 @@ export default function Universe() {
         baseSize={4}
       />
 
-      {/* Exoplanets: ~6K as green points */}
+      {/* Exoplanets: ~6K as green points — only visible when zoomed in close */}
       <ObjectField
         objects={exoplanets}
         visible={exoplanetsVisible}
         scaleMode={scaleMode}
         onSelect={onSelect}
         baseSize={2}
+        fadeDistance={50}
       />
 
       {/* Radio bubble: humanity's radio transmission sphere */}
