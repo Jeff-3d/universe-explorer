@@ -14,6 +14,7 @@ import TourPlayer from './ui/TourPlayer'
 import InstrumentFilter from './ui/InstrumentFilter'
 import RealSkyOverlay from './ui/RealSkyOverlay'
 import CosmicTimeline from './ui/CosmicTimeline'
+import SnapshotJournal from './ui/SnapshotJournal'
 import SizeComparison from './ui/SizeComparison'
 
 export default function App() {
@@ -116,6 +117,9 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {/* Snapshot journal — top right area */}
+      {!starsLoading && !starsError && <SnapshotJournal />}
 
       {/* Info panel — top right */}
       <InfoPanel />
