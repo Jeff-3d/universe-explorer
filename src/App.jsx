@@ -7,6 +7,7 @@ import SearchBar from './ui/SearchBar'
 import ScaleToggle from './ui/ScaleToggle'
 import SpeedControl from './ui/SpeedControl'
 import ViewModeToggle from './ui/ViewModeToggle'
+import AudioControls from './ui/AudioControls'
 
 export default function App() {
   const starsLoading = useStore((s) => s.starsLoading)
@@ -93,6 +94,9 @@ export default function App() {
 
       {/* Speed control — bottom center */}
       {!starsLoading && !starsError && <SpeedControl />}
+
+      {/* Audio controls — bottom right */}
+      {!starsLoading && !starsError && <AudioControls />}
     </div>
   )
 }

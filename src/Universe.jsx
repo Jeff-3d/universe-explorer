@@ -14,6 +14,7 @@ import { useCatalog } from './hooks/useCatalog'
 import { useCamera } from './hooks/useCamera'
 import { useFlightControls } from './hooks/useFlightControls'
 import { useStore } from './store'
+import { useAudio } from './hooks/useAudio'
 
 /**
  * Root Three.js scene component.
@@ -44,6 +45,9 @@ export default function Universe() {
 
   // Fly-to camera animation
   useCamera()
+
+  // Audio integration
+  useAudio()
 
   const onSelect = useCallback((obj) => {
     setSelectedObject(obj)
