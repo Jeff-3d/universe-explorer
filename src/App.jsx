@@ -10,6 +10,12 @@ export default function App() {
   const starsLoading = useStore((s) => s.starsLoading)
   const starsError = useStore((s) => s.starsError)
   const starCount = useStore((s) => s.starCount)
+  const galaxyCount = useStore((s) => s.galaxyCount)
+  const nebulaCount = useStore((s) => s.nebulaCount)
+  const clusterCount = useStore((s) => s.clusterCount)
+  const exoplanetCount = useStore((s) => s.exoplanetCount)
+
+  const totalObjects = starCount + galaxyCount + nebulaCount + clusterCount + exoplanetCount
 
   return (
     <div className="w-full h-full relative">
@@ -51,7 +57,7 @@ export default function App() {
         </h1>
         {!starsLoading && !starsError && (
           <p className="text-sm text-white/50 mt-1 mb-3">
-            {starCount.toLocaleString()} stars loaded
+            {totalObjects.toLocaleString()} objects loaded
           </p>
         )}
 

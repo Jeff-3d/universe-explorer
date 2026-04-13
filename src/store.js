@@ -7,6 +7,18 @@ export const useStore = create((set) => ({
   starsError: null,
   starCount: 0,
 
+  galaxies: null,
+  galaxyCount: 0,
+  nebulae: null,
+  nebulaCount: 0,
+  clusters: null,
+  clusterCount: 0,
+  exoplanets: null,
+  exoplanetCount: 0,
+
+  catalogLoading: true,
+  catalogError: null,
+
   // Selected object
   selectedObject: null,
   setSelectedObject: (obj) => set({ selectedObject: obj }),
@@ -49,4 +61,16 @@ export const useStore = create((set) => ({
   setStars: (stars) =>
     set({ stars, starsLoading: false, starCount: stars ? stars.length : 0 }),
   setStarsError: (error) => set({ starsError: error, starsLoading: false }),
+
+  setGalaxies: (galaxies) =>
+    set({ galaxies, galaxyCount: galaxies ? galaxies.length : 0 }),
+  setNebulae: (nebulae) =>
+    set({ nebulae, nebulaCount: nebulae ? nebulae.length : 0 }),
+  setClusters: (clusters) =>
+    set({ clusters, clusterCount: clusters ? clusters.length : 0 }),
+  setExoplanets: (exoplanets) =>
+    set({ exoplanets, exoplanetCount: exoplanets ? exoplanets.length : 0 }),
+
+  setCatalogLoading: (loading) => set({ catalogLoading: loading }),
+  setCatalogError: (error) => set({ catalogError: error }),
 }))

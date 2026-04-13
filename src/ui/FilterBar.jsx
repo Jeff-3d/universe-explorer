@@ -8,13 +8,17 @@ export default function FilterBar() {
   const filters = useStore((s) => s.filters)
   const toggleFilter = useStore((s) => s.toggleFilter)
   const starCount = useStore((s) => s.starCount)
+  const galaxyCount = useStore((s) => s.galaxyCount)
+  const nebulaCount = useStore((s) => s.nebulaCount)
+  const clusterCount = useStore((s) => s.clusterCount)
+  const exoplanetCount = useStore((s) => s.exoplanetCount)
 
   const types = [
     { key: 'stars', label: 'Stars', count: starCount, color: '#FFF4EA' },
-    { key: 'galaxies', label: 'Galaxies', count: 0, color: '#C4A5FF' },
-    { key: 'nebulae', label: 'Nebulae', count: 0, color: '#FF6B8A' },
-    { key: 'clusters', label: 'Clusters', count: 0, color: '#6BC5FF' },
-    { key: 'exoplanets', label: 'Exoplanets', count: 0, color: '#7BFF8A' },
+    { key: 'galaxies', label: 'Galaxies', count: galaxyCount, color: '#C4A5FF' },
+    { key: 'nebulae', label: 'Nebulae', count: nebulaCount, color: '#FF6B8A' },
+    { key: 'clusters', label: 'Clusters', count: clusterCount, color: '#6BC5FF' },
+    { key: 'exoplanets', label: 'Exoplanets', count: exoplanetCount, color: '#7BFF8A' },
     { key: 'blackHoles', label: 'Black Holes', count: 0, color: '#888' },
   ]
 
