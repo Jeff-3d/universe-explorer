@@ -12,6 +12,7 @@ import RadiationIndicator from './ui/RadiationIndicator'
 import DistanceNarration from './ui/DistanceNarration'
 import TourPlayer from './ui/TourPlayer'
 import InstrumentFilter from './ui/InstrumentFilter'
+import RealSkyOverlay from './ui/RealSkyOverlay'
 import SizeComparison from './ui/SizeComparison'
 
 export default function App() {
@@ -97,6 +98,13 @@ export default function App() {
         {!starsLoading && !starsError && (
           <div className="mt-2">
             <InstrumentFilter />
+          </div>
+        )}
+
+        {/* Tonight's sky */}
+        {!starsLoading && !starsError && (
+          <div className="mt-2">
+            <RealSkyOverlay />
           </div>
         )}
 
