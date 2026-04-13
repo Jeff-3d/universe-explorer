@@ -24,6 +24,7 @@ export function useCamera() {
   const cameraTarget = useStore((s) => s.cameraTarget)
   const setCameraTarget = useStore((s) => s.setCameraTarget)
   const setIsFlyingTo = useStore((s) => s.setIsFlyingTo)
+  const setOrbitTarget = useStore((s) => s.setOrbitTarget)
   const scaleMode = useStore((s) => s.scaleMode)
 
   const animating = useRef(false)
@@ -92,6 +93,7 @@ export function useCamera() {
     if (t >= 1) {
       animating.current = false
       setIsFlyingTo(false)
+      setOrbitTarget({ x: lookAtPos.current.x, y: lookAtPos.current.y, z: lookAtPos.current.z })
       setCameraTarget(null)
     }
   })

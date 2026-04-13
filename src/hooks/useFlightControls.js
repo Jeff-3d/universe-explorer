@@ -38,6 +38,8 @@ export function useFlightControls(canvasRef) {
   const speedLevel = useStore((s) => s.speedLevel)
   const setSpeedLevel = useStore((s) => s.setSpeedLevel)
   const isFlyingTo = useStore((s) => s.isFlyingTo)
+  const orbitTarget = useStore((s) => s.orbitTarget)
+  const setOrbitTarget = useStore((s) => s.setOrbitTarget)
   const wasFlyingTo = useRef(false)
 
   // Key state
@@ -107,27 +109,48 @@ export function useFlightControls(canvasRef) {
       }
     }
     const onMouseMove = (e) => {
+      const isDrag = leftDragging.current || isDragging.current
+
       // Left-click drag: start rotating after 5px of movement
       if (leftDragging.current) {
         leftDragDist.current += Math.abs(e.movementX) + Math.abs(e.movementY)
-        if (leftDragDist.current > 5) {
-          // Apply rotation
-          const sensitivity = 0.002
-          euler.current.y -= e.movementX * sensitivity
-          euler.current.x -= e.movementY * sensitivity
-          euler.current.x = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, euler.current.x))
-        }
+        if (leftDragDist.current <= 5) return
+        e.preventDefault()
+      } else if (!isDragging.current) {
         return
       }
 
-      if (!isDragging.current) return
-
       const sensitivity = 0.002
-      euler.current.y -= e.movementX * sensitivity
-      euler.current.x -= e.movementY * sensitivity
+      const orb = useStore.getState().orbitTarget
 
-      // Clamp pitch to avoid flipping
-      euler.current.x = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, euler.current.x))
+      if (orb) {
+        // Orbit mode: rotate camera around the target point
+        const pivot = new THREE.Vector3(orb.x, orb.y, orb.z)
+        const offset = camera.position.clone().sub(pivot)
+        const radius = offset.length()
+
+        // Spherical rotation around pivot
+        const qY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -e.movementX * sensitivity)
+        const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion)
+        const qX = new THREE.Quaternion().setFromAxisAngle(right, -e.movementY * sensitivity)
+
+        offset.applyQuaternion(qY).applyQuaternion(qX)
+
+        // Prevent flipping past poles
+        const up = offset.clone().normalize()
+        if (Math.abs(up.y) > 0.99) {
+          offset.applyQuaternion(qX.invert())
+        }
+
+        camera.position.copy(pivot).add(offset)
+        camera.lookAt(pivot)
+        euler.current.setFromQuaternion(camera.quaternion, 'YXZ')
+      } else {
+        // Free-look mode: rotate camera in place
+        euler.current.y -= e.movementX * sensitivity
+        euler.current.x -= e.movementY * sensitivity
+        euler.current.x = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, euler.current.x))
+      }
     }
 
     const onWheel = (e) => {
@@ -135,25 +158,41 @@ export function useFlightControls(canvasRef) {
       if (e.target !== canvas) return
       e.preventDefault()
 
-      // Scroll wheel zooms (moves camera forward/backward)
-      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion)
-      const currentSpeed = SPEED_TABLE[useStore.getState().speedLevel] || 0.5
-      const zoomStep = currentSpeed * 0.5 // Scale zoom distance by current speed level
+      const orb = useStore.getState().orbitTarget
 
-      if (e.deltaY < 0) {
-        camera.position.addScaledVector(forward, zoomStep)
+      if (orb) {
+        // Orbit mode: dolly toward/away from target
+        const pivot = new THREE.Vector3(orb.x, orb.y, orb.z)
+        const offset = camera.position.clone().sub(pivot)
+        const dist = offset.length()
+        const factor = e.deltaY < 0 ? 0.85 : 1.18 // zoom in/out
+        const newDist = Math.max(0.5, dist * factor)
+        offset.normalize().multiplyScalar(newDist)
+        camera.position.copy(pivot).add(offset)
       } else {
-        camera.position.addScaledVector(forward, -zoomStep)
+        // Free flight: move forward/backward
+        const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion)
+        const currentSpeed = SPEED_TABLE[useStore.getState().speedLevel] || 0.5
+        const zoomStep = currentSpeed * 0.5
+        if (e.deltaY < 0) {
+          camera.position.addScaledVector(forward, zoomStep)
+        } else {
+          camera.position.addScaledVector(forward, -zoomStep)
+        }
       }
     }
 
     const onContextMenu = (e) => e.preventDefault()
+    const onDragStart = (e) => e.preventDefault()
+    const onSelectStart = (e) => { if (leftDragging.current) e.preventDefault() }
 
     canvas.addEventListener('mousedown', onMouseDown)
     canvas.addEventListener('mouseup', onMouseUp)
     canvas.addEventListener('mousemove', onMouseMove)
     canvas.addEventListener('wheel', onWheel, { passive: false })
     canvas.addEventListener('contextmenu', onContextMenu)
+    canvas.addEventListener('dragstart', onDragStart)
+    document.addEventListener('selectstart', onSelectStart)
 
     return () => {
       canvas.removeEventListener('mousedown', onMouseDown)
@@ -161,6 +200,8 @@ export function useFlightControls(canvasRef) {
       canvas.removeEventListener('mousemove', onMouseMove)
       canvas.removeEventListener('wheel', onWheel)
       canvas.removeEventListener('contextmenu', onContextMenu)
+      canvas.removeEventListener('dragstart', onDragStart)
+      document.removeEventListener('selectstart', onSelectStart)
     }
   }, [gl, setSpeedLevel])
 
@@ -187,7 +228,12 @@ export function useFlightControls(canvasRef) {
 
     const moveSpeed = speed * boost * brake * delta
 
-    // WASD movement
+    // WASD movement — exit orbit mode on any movement key
+    const moving = k['KeyW'] || k['KeyS'] || k['KeyA'] || k['KeyD'] || k['KeyQ'] || k['KeyE']
+    if (moving && orbitTarget) {
+      setOrbitTarget(null)
+    }
+
     if (k['KeyW']) camera.position.addScaledVector(forward, moveSpeed)
     if (k['KeyS']) camera.position.addScaledVector(forward, -moveSpeed)
     if (k['KeyA']) camera.position.addScaledVector(right, -moveSpeed)

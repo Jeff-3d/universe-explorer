@@ -70,6 +70,8 @@ export const useStore = create((set) => ({
   setCameraTarget: (target) => set({ cameraTarget: target }),
   isFlyingTo: false,
   setIsFlyingTo: (v) => set({ isFlyingTo: v }),
+  orbitTarget: null,
+  setOrbitTarget: (t) => set({ orbitTarget: t }),
 
   // Catalog actions
   setStars: (stars) =>
