@@ -13,6 +13,7 @@ import MotionVectors from './objects/MotionVectors'
 import HabitableZone from './objects/HabitableZone'
 import RadioBubble from './objects/RadioBubble'
 import LightCone from './objects/LightCone'
+import DarkMatterHalo from './objects/DarkMatterHalo'
 import { useCatalog } from './hooks/useCatalog'
 import { useCamera } from './hooks/useCamera'
 import { useFlightControls } from './hooks/useFlightControls'
@@ -84,6 +85,9 @@ export default function Universe() {
 
       {/* Galaxy sprites: detailed billboards for nearby galaxies */}
       <GalaxySprite />
+
+      {/* Dark matter halos around nearby galaxies */}
+      <DarkMatterHalo />
 
       {/* Nebulae: ~430 as pink/red points */}
       <ObjectField

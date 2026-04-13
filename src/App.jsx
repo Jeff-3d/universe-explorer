@@ -8,6 +8,7 @@ import ScaleToggle from './ui/ScaleToggle'
 import SpeedControl from './ui/SpeedControl'
 import ViewModeToggle from './ui/ViewModeToggle'
 import AudioControls from './ui/AudioControls'
+import RadiationIndicator from './ui/RadiationIndicator'
 
 export default function App() {
   const starsLoading = useStore((s) => s.starsLoading)
@@ -85,6 +86,13 @@ export default function App() {
         {!starsLoading && !starsError && (
           <div className="mt-2">
             <ViewModeToggle />
+          </div>
+        )}
+
+        {/* Radiation indicator */}
+        {!starsLoading && !starsError && (
+          <div className="mt-2">
+            <RadiationIndicator />
           </div>
         )}
       </div>
