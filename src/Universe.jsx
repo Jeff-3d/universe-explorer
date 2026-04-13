@@ -11,6 +11,8 @@ import WarpEffect from './objects/WarpEffect'
 import WarpTunnel from './objects/WarpTunnel'
 import MotionVectors from './objects/MotionVectors'
 import HabitableZone from './objects/HabitableZone'
+import RadioBubble from './objects/RadioBubble'
+import LightCone from './objects/LightCone'
 import { useCatalog } from './hooks/useCatalog'
 import { useCamera } from './hooks/useCamera'
 import { useFlightControls } from './hooks/useFlightControls'
@@ -109,6 +111,12 @@ export default function Universe() {
         onSelect={onSelect}
         baseSize={2}
       />
+
+      {/* Radio bubble: humanity's radio transmission sphere */}
+      <RadioBubble />
+
+      {/* Light cone: selected object's light travel sphere */}
+      <LightCone />
 
       {/* Cosmic web: large-scale filamentary structure */}
       <CosmicWeb />
