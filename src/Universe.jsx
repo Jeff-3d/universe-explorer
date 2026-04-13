@@ -1,4 +1,6 @@
 import { useCallback } from 'react'
+import { EffectComposer, Bloom, Vignette, Noise } from '@react-three/postprocessing'
+import { BlendFunction } from 'postprocessing'
 import StarField from './objects/StarField'
 import ObjectField from './objects/ObjectField'
 import { useCatalog } from './hooks/useCatalog'
@@ -83,6 +85,29 @@ export default function Universe() {
         onSelect={onSelect}
         baseSize={2}
       />
+
+      {/* Post-processing pipeline */}
+      <EffectComposer>
+        {/* Bloom: bright stars naturally glow */}
+        <Bloom
+          luminanceThreshold={0.2}
+          luminanceSmoothing={0.9}
+          intensity={0.8}
+          mipmapBlur
+        />
+        {/* Vignette: subtle edge darkening */}
+        <Vignette
+          offset={0.3}
+          darkness={0.6}
+          blendFunction={BlendFunction.NORMAL}
+        />
+        {/* Film grain: very subtle noise for cinematic feel */}
+        <Noise
+          premultiply
+          blendFunction={BlendFunction.ADD}
+          opacity={0.03}
+        />
+      </EffectComposer>
     </>
   )
 }
