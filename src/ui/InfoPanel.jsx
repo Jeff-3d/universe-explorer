@@ -1,4 +1,5 @@
 import { useStore } from '../store'
+import SizeComparison from './SizeComparison'
 
 /**
  * Slide-in panel showing details of the selected celestial object.
@@ -63,6 +64,9 @@ export default function InfoPanel() {
         <InfoRow label="RA" value={obj.ra ? `${obj.ra.toFixed(4)}\u00b0` : null} />
         <InfoRow label="Dec" value={obj.dec ? `${obj.dec.toFixed(4)}\u00b0` : null} />
       </div>
+
+      {/* Size comparisons */}
+      <SizeComparison />
 
       {/* Travel button */}
       <button

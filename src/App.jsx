@@ -9,6 +9,8 @@ import SpeedControl from './ui/SpeedControl'
 import ViewModeToggle from './ui/ViewModeToggle'
 import AudioControls from './ui/AudioControls'
 import RadiationIndicator from './ui/RadiationIndicator'
+import DistanceNarration from './ui/DistanceNarration'
+import SizeComparison from './ui/SizeComparison'
 
 export default function App() {
   const starsLoading = useStore((s) => s.starsLoading)
@@ -102,6 +104,9 @@ export default function App() {
 
       {/* Speed control — bottom center */}
       {!starsLoading && !starsError && <SpeedControl />}
+
+      {/* Distance narration — center screen */}
+      {!starsLoading && !starsError && <DistanceNarration />}
 
       {/* Audio controls — bottom right */}
       {!starsLoading && !starsError && <AudioControls />}
