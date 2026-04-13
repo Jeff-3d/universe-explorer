@@ -1,6 +1,10 @@
 import { Canvas } from '@react-three/fiber'
 import Universe from './Universe'
 import { useStore } from './store'
+import InfoPanel from './ui/InfoPanel'
+import FilterBar from './ui/FilterBar'
+import SearchBar from './ui/SearchBar'
+import ScaleToggle from './ui/ScaleToggle'
 
 export default function App() {
   const starsLoading = useStore((s) => s.starsLoading)
@@ -40,17 +44,37 @@ export default function App() {
         </div>
       )}
 
-      {/* HUD overlay */}
-      <div className="absolute top-4 left-4 pointer-events-none">
+      {/* HUD overlay — top left */}
+      <div className="absolute top-4 left-4 pointer-events-auto z-20">
         <h1 className="text-2xl font-bold text-white/90 tracking-wide">
           Universe Explorer
         </h1>
         {!starsLoading && !starsError && (
-          <p className="text-sm text-white/50 mt-1">
+          <p className="text-sm text-white/50 mt-1 mb-3">
             {starCount.toLocaleString()} stars loaded
           </p>
         )}
+
+        {/* Search */}
+        {!starsLoading && !starsError && (
+          <div className="mb-3">
+            <SearchBar />
+          </div>
+        )}
+
+        {/* Filters */}
+        {!starsLoading && !starsError && (
+          <div className="mb-3">
+            <FilterBar />
+          </div>
+        )}
+
+        {/* Scale toggle */}
+        {!starsLoading && !starsError && <ScaleToggle />}
       </div>
+
+      {/* Info panel — top right */}
+      <InfoPanel />
     </div>
   )
 }

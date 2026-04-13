@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useMemo, useRef, useCallback } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useStore } from '../store'
 
@@ -144,7 +144,11 @@ function buildStarBuffers(stars, scaleMode) {
 export default function StarField() {
   const stars = useStore((s) => s.stars)
   const scaleMode = useStore((s) => s.scaleMode)
+  const starsVisible = useStore((s) => s.filters.stars)
+  const setSelectedObject = useStore((s) => s.setSelectedObject)
   const materialRef = useRef()
+  const pointsRef = useRef()
+  const { raycaster } = useThree()
 
   // Build geometry buffers from star data
   const { positions, colors, sizes, brightness } = useMemo(() => {
@@ -162,14 +166,42 @@ export default function StarField() {
     return result
   }, [stars, scaleMode])
 
-  // Reserve for future per-frame uniform updates (floating origin in Phase 6)
+  // Set raycaster threshold for Points geometry
   useFrame(() => {
+    raycaster.params.Points.threshold = 1.5
   })
 
-  if (!stars || stars.length === 0) return null
+  // Track pointer down position to distinguish click from drag
+  const pointerDown = useRef(null)
+
+  const handlePointerDown = useCallback((e) => {
+    pointerDown.current = { x: e.clientX, y: e.clientY }
+  }, [])
+
+  // Click handler — find nearest intersected star (only on real clicks, not drags)
+  const handleClick = useCallback(
+    (e) => {
+      if (!stars || !e.intersections.length) return
+      // Ignore if pointer moved more than 5px (it was a drag/orbit)
+      if (pointerDown.current) {
+        const dx = e.clientX - pointerDown.current.x
+        const dy = e.clientY - pointerDown.current.y
+        if (Math.sqrt(dx * dx + dy * dy) > 5) return
+      }
+      e.stopPropagation()
+      const hit = e.intersections[0]
+      const index = hit.index
+      if (index !== undefined && index < stars.length) {
+        setSelectedObject(stars[index])
+      }
+    },
+    [stars, setSelectedObject]
+  )
+
+  if (!stars || stars.length === 0 || !starsVisible) return null
 
   return (
-    <points frustumCulled={false}>
+    <points ref={pointsRef} frustumCulled={false} onPointerDown={handlePointerDown} onClick={handleClick}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"

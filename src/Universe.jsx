@@ -1,6 +1,9 @@
+import { useRef, useEffect } from 'react'
 import { OrbitControls } from '@react-three/drei'
 import StarField from './objects/StarField'
 import { useCatalog } from './hooks/useCatalog'
+import { useCamera } from './hooks/useCamera'
+import { useStore } from './store'
 
 /**
  * Root Three.js scene component.
@@ -10,8 +13,21 @@ import { useCatalog } from './hooks/useCatalog'
  * controls in Phase 6.
  */
 export default function Universe() {
+  const controlsRef = useRef()
+  const setOrbitControlsRef = useStore((s) => s.setOrbitControlsRef)
+
   // Trigger catalog loading
   useCatalog()
+
+  // Fly-to camera animation
+  useCamera()
+
+  // Share OrbitControls ref with the camera hook
+  useEffect(() => {
+    if (controlsRef.current) {
+      setOrbitControlsRef(controlsRef.current)
+    }
+  }, [setOrbitControlsRef])
 
   return (
     <>
@@ -23,6 +39,7 @@ export default function Universe() {
 
       {/* Orbit controls (temporary, replaced by flight controls in Phase 6) */}
       <OrbitControls
+        ref={controlsRef}
         enableDamping
         dampingFactor={0.05}
         minDistance={0.1}
