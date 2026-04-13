@@ -53,10 +53,6 @@ export const useStore = create((set) => ({
   cameraTarget: null,
   setCameraTarget: (target) => set({ cameraTarget: target }),
 
-  // OrbitControls ref (set by Universe.jsx, used by useCamera)
-  orbitControlsRef: null,
-  setOrbitControlsRef: (ref) => set({ orbitControlsRef: ref }),
-
   // Catalog actions
   setStars: (stars) =>
     set({ stars, starsLoading: false, starCount: stars ? stars.length : 0 }),

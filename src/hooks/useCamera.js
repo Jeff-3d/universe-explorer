@@ -8,11 +8,9 @@ import { useStore } from '../store'
  *
  * When cameraTarget is set in the store, smoothly animates the camera
  * from its current position to a viewpoint near the target object.
- * Disables OrbitControls during animation and updates its target
- * on completion so the camera orbits around the destination.
+ * Uses cubic ease-out for cinematic deceleration.
  */
 
-// Log-compress a position to match StarField's visual coordinates
 function logCompress(x, y, z) {
   const dist = Math.sqrt(x * x + y * y + z * z)
   if (dist < 0.001) return new THREE.Vector3(0, 0, 0)
@@ -25,13 +23,14 @@ export function useCamera() {
   const { camera } = useThree()
   const cameraTarget = useStore((s) => s.cameraTarget)
   const setCameraTarget = useStore((s) => s.setCameraTarget)
-  const orbitControls = useStore((s) => s.orbitControlsRef)
   const scaleMode = useStore((s) => s.scaleMode)
 
   const animating = useRef(false)
   const startPos = useRef(new THREE.Vector3())
   const endPos = useRef(new THREE.Vector3())
   const lookAtPos = useRef(new THREE.Vector3())
+  const startQuat = useRef(new THREE.Quaternion())
+  const endQuat = useRef(new THREE.Quaternion())
   const progress = useRef(0)
   const prevTarget = useRef(null)
 
@@ -45,9 +44,6 @@ export function useCamera() {
     // New target — set up animation
     if (cameraTarget !== prevTarget.current) {
       prevTarget.current = cameraTarget
-
-      // Disable OrbitControls during fly-to
-      if (orbitControls) orbitControls.enabled = false
 
       // Compute target position in visual space
       let targetVec
@@ -65,12 +61,18 @@ export function useCamera() {
         .normalize()
       if (dir.length() < 0.001) dir.set(0, 0, 1)
 
-      // Place camera at a comfortable viewing distance from the target
-      // Use a larger offset so the star is clearly identifiable
       const viewDist = Math.max(5, targetVec.length() * 0.05)
       endPos.current.copy(targetVec).add(dir.multiplyScalar(viewDist))
 
       startPos.current.copy(camera.position)
+      startQuat.current.copy(camera.quaternion)
+
+      // Compute end quaternion (looking at target from end position)
+      const tempCam = camera.clone()
+      tempCam.position.copy(endPos.current)
+      tempCam.lookAt(lookAtPos.current)
+      endQuat.current.copy(tempCam.quaternion)
+
       progress.current = 0
       animating.current = true
     }
@@ -83,18 +85,10 @@ export function useCamera() {
     const ease = 1 - Math.pow(1 - t, 3)
 
     camera.position.lerpVectors(startPos.current, endPos.current, ease)
-    camera.lookAt(lookAtPos.current)
+    camera.quaternion.slerpQuaternions(startQuat.current, endQuat.current, ease)
 
     if (t >= 1) {
       animating.current = false
-
-      // Update OrbitControls target to the star's position and re-enable
-      if (orbitControls) {
-        orbitControls.target.copy(lookAtPos.current)
-        orbitControls.enabled = true
-        orbitControls.update()
-      }
-
       setCameraTarget(null)
     }
   })

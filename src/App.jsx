@@ -5,6 +5,7 @@ import InfoPanel from './ui/InfoPanel'
 import FilterBar from './ui/FilterBar'
 import SearchBar from './ui/SearchBar'
 import ScaleToggle from './ui/ScaleToggle'
+import SpeedControl from './ui/SpeedControl'
 
 export default function App() {
   const starsLoading = useStore((s) => s.starsLoading)
@@ -81,6 +82,9 @@ export default function App() {
 
       {/* Info panel — top right */}
       <InfoPanel />
+
+      {/* Speed control — bottom center */}
+      {!starsLoading && !starsError && <SpeedControl />}
     </div>
   )
 }
