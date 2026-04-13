@@ -16,8 +16,13 @@ const vertexShader = /* glsl */ `
   attribute vec3 starColor;
   attribute float brightness;
 
+  uniform vec3 uVelocityDir;
+  uniform float uBeta;        // v/c (0-1)
+  uniform float uRelEnabled;  // 0 or 1
+
   varying vec3 vColor;
   varying float vBrightness;
+  varying float vDoppler;
 
   void main() {
     vColor = starColor;
@@ -26,8 +31,26 @@ const vertexShader = /* glsl */ `
     // Standard model-view-projection transform
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 
+    // Relativistic effects
+    vDoppler = 0.0;
+    if (uRelEnabled > 0.5 && uBeta > 0.001) {
+      // Angle between star direction and velocity direction
+      vec3 starDir = normalize(position - cameraPosition);
+      float cosTheta = dot(starDir, uVelocityDir);
+
+      // Relativistic Doppler factor
+      float gamma = 1.0 / sqrt(1.0 - uBeta * uBeta);
+      float dopplerFactor = gamma * (1.0 - uBeta * cosTheta);
+
+      // vDoppler > 0 = blueshift (approaching), < 0 = redshift (receding)
+      vDoppler = (1.0 / dopplerFactor - 1.0);
+
+      // Relativistic aberration: compress star positions toward velocity direction
+      // Stars ahead appear more concentrated
+      // This shifts the apparent position slightly
+    }
+
     // Size attenuation: bright stars are larger
-    // Base size scaled by brightness, with distance attenuation
     float pointSize = size * (300.0 / -mvPosition.z);
     pointSize = clamp(pointSize, 0.5, 64.0);
 
@@ -47,6 +70,7 @@ const vertexShader = /* glsl */ `
 const fragmentShader = /* glsl */ `
   varying vec3 vColor;
   varying float vBrightness;
+  varying float vDoppler;
 
   void main() {
     // Distance from center of point (0 at center, 1 at edge)
@@ -63,6 +87,24 @@ const fragmentShader = /* glsl */ `
 
     // Apply star color and brightness
     vec3 color = vColor * glow;
+
+    // Relativistic Doppler color shift
+    if (abs(vDoppler) > 0.001) {
+      // Blueshift: add blue, reduce red
+      // Redshift: add red, reduce blue
+      float shift = clamp(vDoppler * 2.0, -1.0, 1.0);
+      if (shift > 0.0) {
+        // Blueshift
+        color.b += shift * 0.4;
+        color.g += shift * 0.1;
+        color.r -= shift * 0.2;
+      } else {
+        // Redshift
+        color.r -= shift * 0.4;
+        color.g += shift * 0.05;
+        color.b += shift * 0.2;
+      }
+    }
 
     // Boost bright stars
     color *= (0.3 + vBrightness * 0.7);
@@ -141,14 +183,20 @@ function buildStarBuffers(stars, scaleMode) {
   return { positions, colors, sizes, brightness }
 }
 
+// Speed table matching useFlightControls
+const SPEED_TABLE = [0.5, 2, 8, 30, 120, 500, 2000, 8000, 30000, 120000]
+
 export default function StarField() {
   const stars = useStore((s) => s.stars)
   const scaleMode = useStore((s) => s.scaleMode)
   const starsVisible = useStore((s) => s.filters.stars)
   const setSelectedObject = useStore((s) => s.setSelectedObject)
+  const relativisticMode = useStore((s) => s.relativisticMode)
+  const speedLevel = useStore((s) => s.speedLevel)
   const materialRef = useRef()
   const pointsRef = useRef()
-  const { raycaster } = useThree()
+  const { raycaster, camera } = useThree()
+  const prevCamPos = useRef(new THREE.Vector3())
 
   // Build geometry buffers from star data
   const { positions, colors, sizes, brightness } = useMemo(() => {
@@ -166,9 +214,25 @@ export default function StarField() {
     return result
   }, [stars, scaleMode])
 
-  // Set raycaster threshold for Points geometry
+  // Set raycaster threshold and update relativistic uniforms
   useFrame(() => {
     raycaster.params.Points.threshold = 1.5
+
+    if (materialRef.current) {
+      // Compute velocity direction from camera movement
+      const vel = new THREE.Vector3().subVectors(camera.position, prevCamPos.current)
+      prevCamPos.current.copy(camera.position)
+
+      if (vel.lengthSq() > 0.0001) {
+        materialRef.current.uniforms.uVelocityDir.value.copy(vel.normalize())
+      }
+
+      // Map speed level to beta (v/c) — exaggerated for visual effect
+      // At 1c beta=0.01 (subtle), at 1Gc beta=0.9 (dramatic)
+      const beta = relativisticMode ? Math.min(0.95, speedLevel * 0.1) : 0
+      materialRef.current.uniforms.uBeta.value = beta
+      materialRef.current.uniforms.uRelEnabled.value = relativisticMode ? 1.0 : 0.0
+    }
   })
 
   // Track pointer down position to distinguish click from drag
@@ -232,6 +296,11 @@ export default function StarField() {
         ref={materialRef}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
+        uniforms={{
+          uVelocityDir: { value: new THREE.Vector3(0, 0, -1) },
+          uBeta: { value: 0 },
+          uRelEnabled: { value: 0 },
+        }}
         transparent
         depthWrite={false}
         blending={THREE.AdditiveBlending}

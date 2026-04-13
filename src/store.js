@@ -49,6 +49,10 @@ export const useStore = create((set) => ({
   speedLevel: 0, // 0 = 1c, 1 = 10c, 3 = 1000c, 6 = 1Mc, 9 = 1Gc
   setSpeedLevel: (level) => set({ speedLevel: Math.max(0, Math.min(9, level)) }),
 
+  // Relativistic mode
+  relativisticMode: false,
+  toggleRelativisticMode: () => set((s) => ({ relativisticMode: !s.relativisticMode })),
+
   // Camera target for fly-to
   cameraTarget: null,
   setCameraTarget: (target) => set({ cameraTarget: target }),

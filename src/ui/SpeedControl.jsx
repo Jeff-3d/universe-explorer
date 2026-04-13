@@ -18,6 +18,8 @@ const SPEED_PRESETS = [
 export default function SpeedControl() {
   const speedLevel = useStore((s) => s.speedLevel)
   const setSpeedLevel = useStore((s) => s.setSpeedLevel)
+  const relativisticMode = useStore((s) => s.relativisticMode)
+  const toggleRelativisticMode = useStore((s) => s.toggleRelativisticMode)
 
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-auto z-20">
@@ -56,6 +58,19 @@ export default function SpeedControl() {
             </button>
           ))}
         </div>
+
+        {/* Relativistic mode toggle */}
+        <button
+          onClick={toggleRelativisticMode}
+          className={`px-2 py-1 rounded text-xs transition-colors border ${
+            relativisticMode
+              ? 'bg-blue-500/30 border-blue-400/50 text-blue-200'
+              : 'bg-white/5 border-white/10 text-white/40 hover:text-white/70'
+          }`}
+          title="Toggle relativistic effects (Doppler shift + aberration)"
+        >
+          REL
+        </button>
 
         {/* Controls hint */}
         <div className="text-[10px] text-white/30 leading-tight ml-2">

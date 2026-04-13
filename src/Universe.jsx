@@ -7,6 +7,8 @@ import ObjectField from './objects/ObjectField'
 import GalaxySprite from './objects/GalaxySprite'
 import CosmicWeb from './objects/CosmicWeb'
 import CMBWall from './objects/CMBWall'
+import WarpEffect from './objects/WarpEffect'
+import WarpTunnel from './objects/WarpTunnel'
 import { useCatalog } from './hooks/useCatalog'
 import { useCamera } from './hooks/useCamera'
 import { useFlightControls } from './hooks/useFlightControls'
@@ -101,6 +103,10 @@ export default function Universe() {
 
       {/* CMB wall: observable universe boundary */}
       <CMBWall />
+
+      {/* Warp speed effects */}
+      <WarpEffect />
+      <WarpTunnel />
 
       {/* Post-processing pipeline */}
       <EffectComposer>
