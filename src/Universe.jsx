@@ -5,6 +5,8 @@ import StarField from './objects/StarField'
 import StarCloseup from './objects/StarCloseup'
 import ObjectField from './objects/ObjectField'
 import GalaxySprite from './objects/GalaxySprite'
+import CosmicWeb from './objects/CosmicWeb'
+import CMBWall from './objects/CMBWall'
 import { useCatalog } from './hooks/useCatalog'
 import { useCamera } from './hooks/useCamera'
 import { useFlightControls } from './hooks/useFlightControls'
@@ -93,6 +95,12 @@ export default function Universe() {
         onSelect={onSelect}
         baseSize={2}
       />
+
+      {/* Cosmic web: large-scale filamentary structure */}
+      <CosmicWeb />
+
+      {/* CMB wall: observable universe boundary */}
+      <CMBWall />
 
       {/* Post-processing pipeline */}
       <EffectComposer>
