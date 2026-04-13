@@ -61,6 +61,10 @@ export const useStore = create((set) => ({
   relativisticMode: false,
   toggleRelativisticMode: () => set((s) => ({ relativisticMode: !s.relativisticMode })),
 
+  // Instrument filter
+  instrument: 'all', // 'all' | 'naked-eye' | 'binoculars' | 'telescope' | 'hubble' | 'jwst'
+  setInstrument: (inst) => set({ instrument: inst }),
+
   // Camera target for fly-to
   cameraTarget: null,
   setCameraTarget: (target) => set({ cameraTarget: target }),

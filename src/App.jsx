@@ -11,6 +11,7 @@ import AudioControls from './ui/AudioControls'
 import RadiationIndicator from './ui/RadiationIndicator'
 import DistanceNarration from './ui/DistanceNarration'
 import TourPlayer from './ui/TourPlayer'
+import InstrumentFilter from './ui/InstrumentFilter'
 import SizeComparison from './ui/SizeComparison'
 
 export default function App() {
@@ -89,6 +90,13 @@ export default function App() {
         {!starsLoading && !starsError && (
           <div className="mt-2">
             <ViewModeToggle />
+          </div>
+        )}
+
+        {/* Instrument filter */}
+        {!starsLoading && !starsError && (
+          <div className="mt-2">
+            <InstrumentFilter />
           </div>
         )}
 

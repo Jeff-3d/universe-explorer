@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useStore } from '../store'
 import { estimatePresentPosition, projectPosition } from '../utils/physics'
+import { INSTRUMENTS } from '../ui/InstrumentFilter'
 
 /**
  * Vertex shader for star points.
@@ -136,15 +137,24 @@ function logCompress(x, y, z) {
   return { x: x * scale, y: y * scale, z: z * scale }
 }
 
-function buildStarBuffers(stars, scaleMode, viewMode = 'observed', timeOffsetKYears = 0) {
-  const count = stars.length
+function buildStarBuffers(stars, scaleMode, viewMode = 'observed', timeOffsetKYears = 0, instrumentId = 'all') {
+  // Get magnitude limit for instrument filter
+  const instrumentDef = INSTRUMENTS.find(i => i.id === instrumentId)
+  const magLimit = instrumentDef ? instrumentDef.magLimit : 99
+
+  // Pre-filter stars by magnitude if instrument is set
+  const filtered = magLimit < 99
+    ? stars.filter(s => (s.magnitude !== null && s.magnitude !== undefined) ? s.magnitude <= magLimit : false)
+    : stars
+
+  const count = filtered.length
   const positions = new Float32Array(count * 3)
   const colors = new Float32Array(count * 3)
   const sizes = new Float32Array(count)
   const brightness = new Float32Array(count)
 
   for (let i = 0; i < count; i++) {
-    const star = stars[i]
+    const star = filtered[i]
 
     // Base position — optionally corrected for light travel time or time-projected
     let baseX = star.x, baseY = star.y, baseZ = star.z
@@ -212,6 +222,7 @@ export default function StarField() {
   const speedLevel = useStore((s) => s.speedLevel)
   const viewMode = useStore((s) => s.viewMode)
   const timeOffset = useStore((s) => s.timeOffset)
+  const instrument = useStore((s) => s.instrument)
   const materialRef = useRef()
   const pointsRef = useRef()
   const { raycaster, camera } = useThree()
@@ -228,10 +239,10 @@ export default function StarField() {
       }
     }
     console.time('buildStarBuffers')
-    const result = buildStarBuffers(stars, scaleMode, viewMode, timeOffset)
+    const result = buildStarBuffers(stars, scaleMode, viewMode, timeOffset, instrument)
     console.timeEnd('buildStarBuffers')
     return result
-  }, [stars, scaleMode, viewMode, timeOffset])
+  }, [stars, scaleMode, viewMode, timeOffset, instrument])
 
   // Set raycaster threshold and update relativistic uniforms
   useFrame(() => {
