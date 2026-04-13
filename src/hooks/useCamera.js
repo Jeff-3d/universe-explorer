@@ -23,6 +23,7 @@ export function useCamera() {
   const { camera } = useThree()
   const cameraTarget = useStore((s) => s.cameraTarget)
   const setCameraTarget = useStore((s) => s.setCameraTarget)
+  const setIsFlyingTo = useStore((s) => s.setIsFlyingTo)
   const scaleMode = useStore((s) => s.scaleMode)
 
   const animating = useRef(false)
@@ -75,6 +76,7 @@ export function useCamera() {
 
       progress.current = 0
       animating.current = true
+      setIsFlyingTo(true)
     }
 
     if (!animating.current) return
@@ -89,6 +91,7 @@ export function useCamera() {
 
     if (t >= 1) {
       animating.current = false
+      setIsFlyingTo(false)
       setCameraTarget(null)
     }
   })

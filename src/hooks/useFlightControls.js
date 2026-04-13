@@ -37,11 +37,15 @@ export function useFlightControls(canvasRef) {
   const { camera, gl } = useThree()
   const speedLevel = useStore((s) => s.speedLevel)
   const setSpeedLevel = useStore((s) => s.setSpeedLevel)
+  const isFlyingTo = useStore((s) => s.isFlyingTo)
+  const wasFlyingTo = useRef(false)
 
   // Key state
   const keys = useRef({})
   const isPointerLocked = useRef(false)
   const isDragging = useRef(false)
+  const leftDragging = useRef(false)
+  const leftDragDist = useRef(0)
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'))
 
   // Initialize camera euler from current orientation
@@ -85,18 +89,37 @@ export function useFlightControls(canvasRef) {
     const canvas = gl.domElement
 
     const onMouseDown = (e) => {
-      // Right-click or middle-click to look
       if (e.button === 2 || e.button === 1) {
+        // Right/middle-click: immediate drag look
         isDragging.current = true
         e.preventDefault()
+      } else if (e.button === 0) {
+        // Left-click: track for drag detection
+        leftDragging.current = true
+        leftDragDist.current = 0
       }
     }
     const onMouseUp = (e) => {
       if (e.button === 2 || e.button === 1) {
         isDragging.current = false
+      } else if (e.button === 0) {
+        leftDragging.current = false
       }
     }
     const onMouseMove = (e) => {
+      // Left-click drag: start rotating after 5px of movement
+      if (leftDragging.current) {
+        leftDragDist.current += Math.abs(e.movementX) + Math.abs(e.movementY)
+        if (leftDragDist.current > 5) {
+          // Apply rotation
+          const sensitivity = 0.002
+          euler.current.y -= e.movementX * sensitivity
+          euler.current.x -= e.movementY * sensitivity
+          euler.current.x = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, euler.current.x))
+        }
+        return
+      }
+
       if (!isDragging.current) return
 
       const sensitivity = 0.002
@@ -112,10 +135,15 @@ export function useFlightControls(canvasRef) {
       if (e.target !== canvas) return
       e.preventDefault()
 
+      // Scroll wheel zooms (moves camera forward/backward)
+      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion)
+      const currentSpeed = SPEED_TABLE[useStore.getState().speedLevel] || 0.5
+      const zoomStep = currentSpeed * 0.5 // Scale zoom distance by current speed level
+
       if (e.deltaY < 0) {
-        setSpeedLevel(useStore.getState().speedLevel + 1)
+        camera.position.addScaledVector(forward, zoomStep)
       } else {
-        setSpeedLevel(useStore.getState().speedLevel - 1)
+        camera.position.addScaledVector(forward, -zoomStep)
       }
     }
 
@@ -138,6 +166,15 @@ export function useFlightControls(canvasRef) {
 
   // Per-frame movement
   useFrame((_, delta) => {
+    // When fly-to animation just finished, sync euler from the final camera orientation
+    if (wasFlyingTo.current && !isFlyingTo) {
+      euler.current.setFromQuaternion(camera.quaternion, 'YXZ')
+    }
+    wasFlyingTo.current = isFlyingTo
+
+    // Skip all flight control input during fly-to animation
+    if (isFlyingTo) return
+
     const k = keys.current
     const speed = SPEED_TABLE[speedLevel] || 0.5
     const boost = k['ShiftLeft'] || k['ShiftRight'] ? 2 : 1

@@ -67,7 +67,7 @@ function logCompress(x, y, z) {
 }
 
 const MAX_HZ = 5 // Max habitable zones to render simultaneously
-const SHOW_DISTANCE = 30 // scene units
+const SHOW_DISTANCE = 3 // scene units — only visible when very close to a star
 
 export default function HabitableZone() {
   const stars = useStore((s) => s.stars)
@@ -138,9 +138,10 @@ export default function HabitableZone() {
       const hz = habitableZone(entry.star.luminosity)
 
       // Convert AU to scene units
-      // 1 AU ≈ 1.58e-5 LY, in log-compressed space this is tiny
-      // We scale up significantly for visibility
-      const auToScene = scaleMode === 'log' ? 0.05 : 0.00001
+      // 1 AU ≈ 1.58e-5 LY. In log-compressed space at close range,
+      // the compression is nearly linear, so we use a small fixed scale.
+      // The ring should only be a tiny fraction of a scene unit.
+      const auToScene = scaleMode === 'log' ? 0.002 : 0.00001
       const innerScene = hz.inner * auToScene
       const outerScene = hz.outer * auToScene
       const totalSize = outerScene * 2.5

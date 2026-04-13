@@ -113,9 +113,9 @@ export default function ConstellationLines() {
 
     const camDist = camera.position.length()
     // Fade constellation lines with distance from origin
-    // Only really visible when near Earth
-    const maxDist = scaleMode === 'log' ? 80 : 500
-    const opacity = Math.max(0, 1 - camDist / maxDist) * 0.3
+    // Only really visible when near Earth (within ~20 scene units)
+    const maxDist = scaleMode === 'log' ? 20 : 100
+    const opacity = Math.max(0, 1 - camDist / maxDist) * 0.12
 
     linesRef.current.material.opacity = opacity
     linesRef.current.visible = opacity > 0.01 && starsVisible
