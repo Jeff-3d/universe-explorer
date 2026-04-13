@@ -88,7 +88,18 @@ export function useCamera() {
     const ease = 1 - Math.pow(1 - t, 3)
 
     camera.position.lerpVectors(startPos.current, endPos.current, ease)
-    camera.quaternion.slerpQuaternions(startQuat.current, endQuat.current, ease)
+
+    // Always face the target during flight (not a pre-computed end quaternion)
+    // This prevents the "turning away" effect when the target is behind the camera
+    const targetQuat = new THREE.Quaternion()
+    const tempMat = new THREE.Matrix4()
+    tempMat.lookAt(camera.position, lookAtPos.current, camera.up)
+    targetQuat.setFromRotationMatrix(tempMat)
+
+    // Slerp from start orientation toward looking at target
+    // Use a faster rotation than position so camera turns to face target early
+    const rotEase = Math.min(1, ease * 1.5)
+    camera.quaternion.slerpQuaternions(startQuat.current, targetQuat, rotEase)
 
     if (t >= 1) {
       animating.current = false
