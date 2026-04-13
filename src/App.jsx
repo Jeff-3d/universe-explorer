@@ -13,6 +13,7 @@ import DistanceNarration from './ui/DistanceNarration'
 import TourPlayer from './ui/TourPlayer'
 import InstrumentFilter from './ui/InstrumentFilter'
 import RealSkyOverlay from './ui/RealSkyOverlay'
+import CosmicTimeline from './ui/CosmicTimeline'
 import SizeComparison from './ui/SizeComparison'
 
 export default function App() {
@@ -124,6 +125,9 @@ export default function App() {
 
       {/* Distance narration — center screen */}
       {!starsLoading && !starsError && <DistanceNarration />}
+
+      {/* Cosmic timeline — top center when time is shifted */}
+      {!starsLoading && !starsError && <CosmicTimeline />}
 
       {/* Tour player — bottom left */}
       {!starsLoading && !starsError && <TourPlayer />}
