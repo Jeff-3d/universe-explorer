@@ -89,6 +89,7 @@ export default function Universe() {
         scaleMode={scaleMode}
         onSelect={onSelect}
         baseSize={5}
+        applyCosmicExpansion
       />
 
       {/* Habitable zones: green rings around stars with luminosity data */}
@@ -107,6 +108,7 @@ export default function Universe() {
         scaleMode={scaleMode}
         onSelect={onSelect}
         baseSize={6}
+        applyCosmicExpansion
       />
 
       {/* Clusters: ~918 as blue points */}
@@ -116,6 +118,7 @@ export default function Universe() {
         scaleMode={scaleMode}
         onSelect={onSelect}
         baseSize={4}
+        applyCosmicExpansion
       />
 
       {/* Exoplanets: ~6K as green points — only visible when zoomed in close */}

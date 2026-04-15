@@ -10,6 +10,24 @@ export const H0 = 67.4        // km/s/Mpc
 export const OMEGA_M = 0.315  // Matter density
 export const OMEGA_L = 0.685  // Dark energy density
 
+// Hubble constant converted to inverse years (for scale factor math)
+// H0 [km/s/Mpc] × (1 Mpc / 3.086e19 km) × (3.156e7 s/yr) ≈ 6.89e-11 /yr for H0=67.4
+const H0_PER_YEAR = H0 * 3.156e7 / 3.086e19
+
+/**
+ * Cosmological scale factor at a given time offset.
+ *
+ * Linear (first-order) approximation valid within ~±1 Gyr:
+ *   a(t)/a_now ≈ 1 + H₀·Δt
+ *
+ * Past → smaller factor (galaxies closer). Future → larger (farther).
+ * Clamped to a minimum of 0.01 so the Big Bang doesn't collapse to zero.
+ */
+export function cosmologicalScaleFactor(timeOffsetYears) {
+  if (!timeOffsetYears) return 1
+  return Math.max(0.01, 1 + H0_PER_YEAR * timeOffsetYears)
+}
+
 // Observable universe radius in light-years (comoving)
 export const OBSERVABLE_RADIUS_LY = 46.5e9
 

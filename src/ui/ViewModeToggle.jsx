@@ -16,10 +16,23 @@ export default function ViewModeToggle() {
     if (kYears === 0) return 'Now'
     const abs = Math.abs(kYears)
     const sign = kYears > 0 ? '+' : '-'
-    if (abs >= 1000) return `${sign}${(abs / 1000).toFixed(0)}M yr`
+    if (abs >= 1e6) return `${sign}${(abs / 1e6).toFixed(2)}B yr`
+    if (abs >= 1e3) return `${sign}${(abs / 1e3).toFixed(0)}M yr`
     if (abs >= 1) return `${sign}${abs.toFixed(0)}K yr`
     return `${sign}${(abs * 1000).toFixed(0)} yr`
   }
+
+  // Slider uses a quadratic mapping so fine control near 0 (thousands of years
+  // for stellar proper motion) expands to ±1B years at the ends for cosmological
+  // expansion. Slider position ∈ [-1000, 1000]; kYears = sign(v) · v².
+  const sliderPos = Math.sign(timeOffset) * Math.round(Math.sqrt(Math.abs(timeOffset)))
+  const onSliderChange = (e) => {
+    const v = parseInt(e.target.value)
+    setTimeOffset(Math.sign(v) * v * v)
+  }
+
+  const kYearsAbs = Math.abs(timeOffset)
+  const speculative = kYearsAbs > 10_000 // beyond ±10M years
 
   return (
     <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg p-2 space-y-1.5">
@@ -57,12 +70,12 @@ export default function ViewModeToggle() {
           min={-1000}
           max={1000}
           step={1}
-          value={timeOffset}
-          onChange={(e) => setTimeOffset(parseInt(e.target.value))}
+          value={sliderPos}
+          onChange={onSliderChange}
           className="w-24 accent-white/40"
-          title="Project positions forward/backward in time"
+          title="Project positions forward/backward in time (±1B years, quadratic scale)"
         />
-        <span className="text-[10px] text-white/50 w-16 text-right font-mono">
+        <span className={`text-[10px] w-16 text-right font-mono ${speculative ? 'text-amber-300/70' : 'text-white/50'}`}>
           {formatTime(timeOffset)}
         </span>
         {timeOffset !== 0 && (
@@ -74,6 +87,13 @@ export default function ViewModeToggle() {
           </button>
         )}
       </div>
+
+      {speculative && (
+        <p className="text-[9px] text-amber-300/60 leading-tight px-0.5">
+          ⚠ Speculative beyond ~10M yr: linear extrapolation ignores galactic
+          rotation and stellar lifetimes; cosmological expansion is first-order.
+        </p>
+      )}
 
       {/* Motion vectors toggle */}
       <button

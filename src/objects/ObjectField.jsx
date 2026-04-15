@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { useStore } from '../store'
 import { INSTRUMENTS } from '../ui/InstrumentFilter'
 import { useClickRaycast } from '../hooks/useClickRaycast'
+import { cosmologicalScaleFactor } from '../utils/cosmology'
 
 /**
  * Generic Points-based field renderer for any object type.
@@ -72,7 +73,7 @@ function logCompress(x, y, z) {
   return { x: x * scale, y: y * scale, z: z * scale }
 }
 
-function buildBuffers(objects, scaleMode, baseSize) {
+function buildBuffers(objects, scaleMode, baseSize, cosmoScale) {
   const count = objects.length
   const positions = new Float32Array(count * 3)
   const colors = new Float32Array(count * 3)
@@ -81,9 +82,13 @@ function buildBuffers(objects, scaleMode, baseSize) {
   for (let i = 0; i < count; i++) {
     const obj = objects[i]
 
-    let px = obj.x, py = obj.y, pz = obj.z
+    let baseX = obj.x * cosmoScale
+    let baseY = obj.y * cosmoScale
+    let baseZ = obj.z * cosmoScale
+
+    let px = baseX, py = baseY, pz = baseZ
     if (scaleMode === 'log') {
-      const c = logCompress(obj.x, obj.y, obj.z)
+      const c = logCompress(baseX, baseY, baseZ)
       px = c.x; py = c.y; pz = c.z
     }
     positions[i * 3] = px
@@ -104,11 +109,15 @@ function buildBuffers(objects, scaleMode, baseSize) {
   return { positions, colors, sizes }
 }
 
-export default function ObjectField({ objects, visible, scaleMode, onSelect, baseSize = 3, fadeDistance = 0 }) {
+export default function ObjectField({ objects, visible, scaleMode, onSelect, baseSize = 3, fadeDistance = 0, applyCosmicExpansion = false }) {
   const materialRef = useRef()
   const pointsRef = useRef()
   const { camera } = useThree()
   const instrument = useStore((s) => s.instrument)
+  const timeOffset = useStore((s) => s.timeOffset)
+
+  // timeOffset is in K years; convert to years before feeding the scale factor
+  const cosmoScale = applyCosmicExpansion ? cosmologicalScaleFactor(timeOffset * 1000) : 1
 
   // Filter objects by instrument magnitude limit
   const filtered = useMemo(() => {
@@ -129,8 +138,8 @@ export default function ObjectField({ objects, visible, scaleMode, onSelect, bas
         sizes: new Float32Array(0),
       }
     }
-    return buildBuffers(filtered, scaleMode, baseSize)
-  }, [filtered, scaleMode, baseSize])
+    return buildBuffers(filtered, scaleMode, baseSize, cosmoScale)
+  }, [filtered, scaleMode, baseSize, cosmoScale])
 
   useFrame(() => {
     // Fade objects based on camera distance (e.g., exoplanets only visible when close)
@@ -161,7 +170,7 @@ export default function ObjectField({ objects, visible, scaleMode, onSelect, bas
       ref={pointsRef}
       frustumCulled={false}
     >
-      <bufferGeometry key={`${objCount}-${scaleMode}`}>
+      <bufferGeometry key={`${objCount}-${scaleMode}-${cosmoScale.toFixed(4)}`}>
         <bufferAttribute
           attach="attributes-position"
           count={objCount}
