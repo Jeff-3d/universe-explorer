@@ -8,8 +8,8 @@
  */
 
 const C_LY_PER_YEAR = 1.0 // Speed of light: 1 LY/year by definition
-const KM_S_TO_LY_YEAR = 1.0 / 299792.458 * 365.25 * 24 * 3600 / (9.461e12)
-// Actually: 1 km/s ≈ 1.022e-6 LY/year
+// HYG catalog stores vx/vy/vz in parsecs per year. Convert to LY/year.
+const PC_PER_YEAR_TO_LY_PER_YEAR = 3.2616
 
 /**
  * Compute estimated present position of a star.
@@ -18,7 +18,7 @@ const KM_S_TO_LY_YEAR = 1.0 / 299792.458 * 365.25 * 24 * 3600 / (9.461e12)
  * 100 LY away, we see it as it was 100 years ago. If it has a known
  * velocity, we can estimate where it is "right now."
  *
- * @param {Object} star - Star with x, y, z (LY), vx, vy, vz (km/s), distance_ly
+ * @param {Object} star - Star with x, y, z (LY), vx, vy, vz (pc/year), distance_ly
  * @returns {Object} { x, y, z } estimated present position in LY
  */
 export function estimatePresentPosition(star) {
@@ -29,11 +29,9 @@ export function estimatePresentPosition(star) {
   const dist = star.distance_ly || Math.sqrt(star.x * star.x + star.y * star.y + star.z * star.z)
   const travelTimeYears = dist // Light travel time = distance in LY
 
-  // Convert velocity from km/s to LY/year
-  // 1 km/s ≈ 1.022e-6 LY/year
-  const vxLY = (star.vx || 0) * 1.022e-6
-  const vyLY = (star.vy || 0) * 1.022e-6
-  const vzLY = (star.vz || 0) * 1.022e-6
+  const vxLY = (star.vx || 0) * PC_PER_YEAR_TO_LY_PER_YEAR
+  const vyLY = (star.vy || 0) * PC_PER_YEAR_TO_LY_PER_YEAR
+  const vzLY = (star.vz || 0) * PC_PER_YEAR_TO_LY_PER_YEAR
 
   return {
     x: star.x + vxLY * travelTimeYears,
@@ -50,9 +48,9 @@ export function estimatePresentPosition(star) {
  * @returns {Object} { x, y, z } projected position
  */
 export function projectPosition(star, deltaYears) {
-  const vxLY = (star.vx || 0) * 1.022e-6
-  const vyLY = (star.vy || 0) * 1.022e-6
-  const vzLY = (star.vz || 0) * 1.022e-6
+  const vxLY = (star.vx || 0) * PC_PER_YEAR_TO_LY_PER_YEAR
+  const vyLY = (star.vy || 0) * PC_PER_YEAR_TO_LY_PER_YEAR
+  const vzLY = (star.vz || 0) * PC_PER_YEAR_TO_LY_PER_YEAR
 
   return {
     x: star.x + vxLY * deltaYears,
@@ -63,8 +61,8 @@ export function projectPosition(star, deltaYears) {
 
 /**
  * Compute velocity magnitude from components.
- * @param {Object} star - Star with vx, vy, vz in km/s
- * @returns {number} Total velocity in km/s
+ * @param {Object} star - Star with vx, vy, vz in pc/year
+ * @returns {number} Total velocity in pc/year
  */
 export function totalVelocity(star) {
   const vx = star.vx || 0

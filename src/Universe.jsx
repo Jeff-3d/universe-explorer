@@ -43,6 +43,9 @@ export default function Universe() {
   const clustersVisible = useStore((s) => s.filters.clusters)
   const exoplanetsVisible = useStore((s) => s.filters.exoplanets)
 
+  // Graphics mode — 'low' skips expensive full-screen shaders and postprocessing
+  const highGfx = useStore((s) => s.graphicsMode) === 'high'
+
   // Trigger catalog loading
   useCatalog()
 
@@ -92,10 +95,10 @@ export default function Universe() {
       <HabitableZone />
 
       {/* Galaxy sprites: detailed billboards for nearby galaxies */}
-      <GalaxySprite />
+      {highGfx && <GalaxySprite />}
 
       {/* Dark matter halos around nearby galaxies */}
-      <DarkMatterHalo />
+      {highGfx && <DarkMatterHalo />}
 
       {/* Nebulae: ~430 as pink/red points */}
       <ObjectField
@@ -131,38 +134,37 @@ export default function Universe() {
       {/* Light cone: selected object's light travel sphere */}
       <LightCone />
 
-      {/* Cosmic web: large-scale filamentary structure */}
-      <CosmicWeb />
+      {/* Cosmic web: large-scale filamentary structure (raymarched — expensive) */}
+      {highGfx && <CosmicWeb />}
 
-      {/* CMB wall: observable universe boundary */}
-      <CMBWall />
+      {/* CMB wall: observable universe boundary (full-sky shell — expensive) */}
+      {highGfx && <CMBWall />}
 
-      {/* Warp speed effects */}
+      {/* Warp speed effects — line streaks are cheap, tunnel is a full-screen shader */}
       <WarpEffect />
-      <WarpTunnel />
+      {highGfx && <WarpTunnel />}
 
-      {/* Post-processing pipeline */}
-      <EffectComposer>
-        {/* Bloom: bright stars naturally glow */}
-        <Bloom
-          luminanceThreshold={0.2}
-          luminanceSmoothing={0.9}
-          intensity={0.8}
-          mipmapBlur
-        />
-        {/* Vignette: subtle edge darkening */}
-        <Vignette
-          offset={0.3}
-          darkness={0.6}
-          blendFunction={BlendFunction.NORMAL}
-        />
-        {/* Film grain: very subtle noise for cinematic feel */}
-        <Noise
-          premultiply
-          blendFunction={BlendFunction.ADD}
-          opacity={0.03}
-        />
-      </EffectComposer>
+      {/* Post-processing pipeline — Bloom is multi-pass blur, biggest GPU cost */}
+      {highGfx && (
+        <EffectComposer>
+          <Bloom
+            luminanceThreshold={0.2}
+            luminanceSmoothing={0.9}
+            intensity={0.8}
+            mipmapBlur
+          />
+          <Vignette
+            offset={0.3}
+            darkness={0.6}
+            blendFunction={BlendFunction.NORMAL}
+          />
+          <Noise
+            premultiply
+            blendFunction={BlendFunction.ADD}
+            opacity={0.03}
+          />
+        </EffectComposer>
+      )}
     </>
   )
 }

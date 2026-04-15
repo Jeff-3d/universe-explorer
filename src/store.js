@@ -6,6 +6,7 @@ export const useStore = create((set) => ({
   starsLoading: true,
   starsError: null,
   starCount: 0,
+  starLoadProgress: 0, // 0..1 download fraction for the stars blob
 
   galaxies: null,
   galaxyCount: 0,
@@ -65,6 +66,13 @@ export const useStore = create((set) => ({
   instrument: 'all', // 'all' | 'naked-eye' | 'binoculars' | 'telescope' | 'hubble' | 'jwst'
   setInstrument: (inst) => set({ instrument: inst }),
 
+  // Graphics mode — 'low' disables expensive effects (bloom, cosmic web,
+  // CMB shell, warp tunnel, galaxy sprites, dark-matter halos) to improve
+  // frame rate on slower GPUs.
+  graphicsMode: 'high', // 'high' | 'low'
+  setGraphicsMode: (mode) => set({ graphicsMode: mode }),
+  toggleGraphicsMode: () => set((s) => ({ graphicsMode: s.graphicsMode === 'high' ? 'low' : 'high' })),
+
   // Camera target for fly-to
   cameraTarget: null,
   setCameraTarget: (target) => set({ cameraTarget: target }),
@@ -75,8 +83,9 @@ export const useStore = create((set) => ({
 
   // Catalog actions
   setStars: (stars) =>
-    set({ stars, starsLoading: false, starCount: stars ? stars.length : 0 }),
+    set({ stars, starsLoading: false, starCount: stars ? stars.length : 0, starLoadProgress: 1 }),
   setStarsError: (error) => set({ starsError: error, starsLoading: false }),
+  setStarLoadProgress: (p) => set({ starLoadProgress: p }),
 
   setGalaxies: (galaxies) =>
     set({ galaxies, galaxyCount: galaxies ? galaxies.length : 0 }),

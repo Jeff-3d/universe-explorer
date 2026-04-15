@@ -73,6 +73,16 @@ export function useFlightControls(canvasRef) {
       } else if (e.code === 'Minus' || e.code === 'NumpadSubtract') {
         setSpeedLevel(speedLevel - 1)
       }
+
+      // 'O' toggles orbit-around-origin mode — drag to rotate the scene
+      if (e.code === 'KeyO') {
+        const cur = useStore.getState().orbitTarget
+        if (cur && cur.x === 0 && cur.y === 0 && cur.z === 0) {
+          useStore.getState().setOrbitTarget(null)
+        } else {
+          useStore.getState().setOrbitTarget({ x: 0, y: 0, z: 0 })
+        }
+      }
     }
     const onKeyUp = (e) => {
       keys.current[e.code] = false

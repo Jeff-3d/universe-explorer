@@ -17,10 +17,12 @@ import CosmicTimeline from './ui/CosmicTimeline'
 import SnapshotJournal from './ui/SnapshotJournal'
 import SettingsPanel from './ui/SettingsPanel'
 import SizeComparison from './ui/SizeComparison'
+import OrbitToggle from './ui/OrbitToggle'
 
 export default function App() {
   const starsLoading = useStore((s) => s.starsLoading)
   const starsError = useStore((s) => s.starsError)
+  const starLoadProgress = useStore((s) => s.starLoadProgress)
   const starCount = useStore((s) => s.starCount)
   const galaxyCount = useStore((s) => s.galaxyCount)
   const nebulaCount = useStore((s) => s.nebulaCount)
@@ -32,7 +34,7 @@ export default function App() {
   return (
     <div className="w-full h-full relative">
       <Canvas
-        camera={{ position: [0, 0, 200], fov: 60, near: 0.01, far: 500000 }}
+        camera={{ position: [0, 0, 200], fov: 60, near: 0.01, far: 1e11 }}
         gl={{
           antialias: true,
           logarithmicDepthBuffer: true,
@@ -42,12 +44,18 @@ export default function App() {
         <Universe />
       </Canvas>
 
-      {/* Loading overlay */}
-      {starsLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
-          <div className="text-center">
-            <div className="text-xl font-light text-white/80 mb-2">Loading Universe...</div>
-            <div className="text-sm text-white/40">Fetching star catalog from Supabase</div>
+      {/* Non-blocking load indicator — bottom center, canvas stays interactive */}
+      {starsLoading && !starsError && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+          <div className="px-4 py-2 rounded-full bg-black/70 border border-white/10 backdrop-blur text-xs text-white/70 flex items-center gap-3">
+            <span>Loading star catalog</span>
+            <div className="w-32 h-1 bg-white/10 rounded overflow-hidden">
+              <div
+                className="h-full bg-white/60 transition-[width] duration-150"
+                style={{ width: `${Math.round((starLoadProgress || 0) * 100)}%` }}
+              />
+            </div>
+            <span className="tabular-nums w-9 text-right">{Math.round((starLoadProgress || 0) * 100)}%</span>
           </div>
         </div>
       )}
@@ -139,6 +147,9 @@ export default function App() {
 
       {/* Audio controls — bottom right */}
       {!starsLoading && !starsError && <AudioControls />}
+
+      {/* Orbit-view toggle — drag to rotate the whole scene */}
+      {!starsLoading && !starsError && <OrbitToggle />}
 
       {/* Settings panel */}
       {!starsLoading && !starsError && <SettingsPanel />}

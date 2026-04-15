@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useStore } from '../store'
 import { INSTRUMENTS } from '../ui/InstrumentFilter'
+import { useClickRaycast } from '../hooks/useClickRaycast'
 
 /**
  * Generic Points-based field renderer for any object type.
@@ -106,8 +107,7 @@ function buildBuffers(objects, scaleMode, baseSize) {
 export default function ObjectField({ objects, visible, scaleMode, onSelect, baseSize = 3, fadeDistance = 0 }) {
   const materialRef = useRef()
   const pointsRef = useRef()
-  const { raycaster, camera } = useThree()
-  const pointerDown = useRef(null)
+  const { camera } = useThree()
   const instrument = useStore((s) => s.instrument)
 
   // Filter objects by instrument magnitude limit
@@ -133,7 +133,6 @@ export default function ObjectField({ objects, visible, scaleMode, onSelect, bas
   }, [filtered, scaleMode, baseSize])
 
   useFrame(() => {
-    raycaster.params.Points.threshold = 2.0
     // Fade objects based on camera distance (e.g., exoplanets only visible when close)
     if (fadeDistance > 0 && materialRef.current) {
       const camDist = camera.position.length()
@@ -143,27 +142,15 @@ export default function ObjectField({ objects, visible, scaleMode, onSelect, bas
     }
   })
 
-  const handlePointerDown = useCallback((e) => {
-    pointerDown.current = { x: e.clientX, y: e.clientY }
-  }, [])
-
-  const handleClick = useCallback(
-    (e) => {
-      if (!filtered.length || !e.intersections.length || !onSelect) return
-      if (pointerDown.current) {
-        const dx = e.clientX - pointerDown.current.x
-        const dy = e.clientY - pointerDown.current.y
-        if (Math.sqrt(dx * dx + dy * dy) > 5) return
-      }
-      e.stopPropagation()
-      const hit = e.intersections[0]
-      const index = hit.index
-      if (index !== undefined && index < filtered.length) {
-        onSelect(filtered[index])
-      }
-    },
-    [filtered, onSelect]
-  )
+  // Manual click-raycast — avoids per-mousemove raycasts through R3F's pointer system.
+  const onHit = useCallback((hit) => {
+    if (!onSelect) return
+    const index = hit.index
+    if (index !== undefined && index < filtered.length) {
+      onSelect(filtered[index])
+    }
+  }, [filtered, onSelect])
+  useClickRaycast(pointsRef, onHit, { threshold: 2.0 })
 
   if (filtered.length === 0 || !visible) return null
 
@@ -173,10 +160,8 @@ export default function ObjectField({ objects, visible, scaleMode, onSelect, bas
     <points
       ref={pointsRef}
       frustumCulled={false}
-      onPointerDown={handlePointerDown}
-      onClick={handleClick}
     >
-      <bufferGeometry key={objCount}>
+      <bufferGeometry key={`${objCount}-${scaleMode}`}>
         <bufferAttribute
           attach="attributes-position"
           count={objCount}

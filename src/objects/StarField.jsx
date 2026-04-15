@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { useStore } from '../store'
 import { estimatePresentPosition, projectPosition } from '../utils/physics'
 import { INSTRUMENTS } from '../ui/InstrumentFilter'
+import { useClickRaycast } from '../hooks/useClickRaycast'
 
 /**
  * Vertex shader for star points.
@@ -225,7 +226,7 @@ export default function StarField() {
   const instrument = useStore((s) => s.instrument)
   const materialRef = useRef()
   const pointsRef = useRef()
-  const { raycaster, camera } = useThree()
+  const { camera } = useThree()
   const prevCamPos = useRef(new THREE.Vector3())
 
   // Build geometry buffers from star data
@@ -245,10 +246,8 @@ export default function StarField() {
     return result
   }, [stars, scaleMode, viewMode, timeOffset, instrument])
 
-  // Set raycaster threshold and update relativistic uniforms
+  // Update relativistic uniforms per frame (raycaster threshold is set on demand in useClickRaycast)
   useFrame(() => {
-    raycaster.params.Points.threshold = 1.5
-
     if (materialRef.current) {
       // Compute velocity direction from camera movement
       const vel = new THREE.Vector3().subVectors(camera.position, prevCamPos.current)
@@ -266,32 +265,16 @@ export default function StarField() {
     }
   })
 
-  // Track pointer down position to distinguish click from drag
-  const pointerDown = useRef(null)
-
-  const handlePointerDown = useCallback((e) => {
-    pointerDown.current = { x: e.clientX, y: e.clientY }
-  }, [])
-
-  // Click handler — find nearest intersected star (only on real clicks, not drags)
-  const handleClick = useCallback(
-    (e) => {
-      if (!stars || !e.intersections.length) return
-      // Ignore if pointer moved more than 5px (it was a drag/orbit)
-      if (pointerDown.current) {
-        const dx = e.clientX - pointerDown.current.x
-        const dy = e.clientY - pointerDown.current.y
-        if (Math.sqrt(dx * dx + dy * dy) > 5) return
-      }
-      e.stopPropagation()
-      const hit = e.intersections[0]
-      const index = hit.index
-      if (index !== undefined && index < stars.length) {
-        setSelectedObject(stars[index])
-      }
-    },
-    [stars, setSelectedObject]
-  )
+  // Manual raycast on click only — never on pointermove. Prevents 109K-point
+  // raycasts from blocking the render loop during drags (black-flash bug).
+  const onHit = useCallback((hit) => {
+    if (!stars) return
+    const index = hit.index
+    if (index !== undefined && index < stars.length) {
+      setSelectedObject(stars[index])
+    }
+  }, [stars, setSelectedObject])
+  useClickRaycast(pointsRef, onHit, { threshold: 1.5 })
 
   if (!stars || stars.length === 0 || !starsVisible) return null
 
@@ -299,8 +282,8 @@ export default function StarField() {
   const starCount = positions.length / 3
 
   return (
-    <points ref={pointsRef} frustumCulled={false} onPointerDown={handlePointerDown} onClick={handleClick}>
-      <bufferGeometry key={starCount}>
+    <points ref={pointsRef} frustumCulled={false}>
+      <bufferGeometry key={`${starCount}-${scaleMode}`}>
         <bufferAttribute
           attach="attributes-position"
           count={starCount}

@@ -15,6 +15,7 @@ const KEYBINDINGS = [
   { key: 'Q/E', action: 'Move up/down' },
   { key: 'Z/C', action: 'Roll left/right' },
   { key: 'Right-drag', action: 'Look around' },
+  { key: 'O', action: 'Orbit view (drag to spin scene)' },
   { key: 'Scroll', action: 'Adjust speed' },
   { key: 'Space', action: 'Brake' },
   { key: 'Shift', action: '2× speed boost' },
@@ -30,6 +31,8 @@ export default function SettingsPanel() {
   const toggleMotionVectors = useStore((s) => s.toggleMotionVectors)
   const relativisticMode = useStore((s) => s.relativisticMode)
   const toggleRelativisticMode = useStore((s) => s.toggleRelativisticMode)
+  const graphicsMode = useStore((s) => s.graphicsMode)
+  const toggleGraphicsMode = useStore((s) => s.toggleGraphicsMode)
 
   if (!open) {
     return (
@@ -56,6 +59,20 @@ export default function SettingsPanel() {
         >
           Close
         </button>
+      </div>
+
+      {/* Performance */}
+      <div className="space-y-2 mb-4">
+        <h4 className="text-[10px] text-white/30 uppercase tracking-wider">Performance</h4>
+        <Toggle
+          label="Low Graphics Mode"
+          checked={graphicsMode === 'low'}
+          onChange={toggleGraphicsMode}
+        />
+        <p className="text-[10px] text-white/30 leading-snug">
+          Disables bloom, cosmic web, CMB shell, warp tunnel, galaxy sprites,
+          and dark-matter halos. Helps if the scene stutters when panning.
+        </p>
       </div>
 
       {/* Feature toggles */}
