@@ -232,9 +232,11 @@ def main():
             'radius': round(float(row['radius']), 4) if pd.notna(row.get('radius')) else None,
             'mass': round(float(row['mass']), 4) if pd.notna(row.get('mass')) else None,
             'color': row['color'] if row['color'] != '#FFFFFF' else None,
-            'vx': round(float(row['vx']), 4) if pd.notna(row.get('vx')) else None,
-            'vy': round(float(row['vy']), 4) if pd.notna(row.get('vy')) else None,
-            'vz': round(float(row['vz']), 4) if pd.notna(row.get('vz')) else None,
+            # No rounding: HYG velocities are ~1e-8 to 1e-4 pc/year, and
+            # rounding to 4 decimals collapsed 85% of stars to zero.
+            'vx': float(row['vx']) if pd.notna(row.get('vx')) else None,
+            'vy': float(row['vy']) if pd.notna(row.get('vy')) else None,
+            'vz': float(row['vz']) if pd.notna(row.get('vz')) else None,
             'color_index': round(float(row['ci']), 4) if pd.notna(row.get('ci')) else None,
         }
         records.append(record)
